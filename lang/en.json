@@ -1,1 +1,6 @@
-
+{
+  "script-vault": {
+    "title": "Script Vault",
+    "description": "Securely store and execute scripts without exposing code to players."
+  }
+}
