@@ -1,4 +1,7 @@
-.script-vault-container {
+/* Script Vault - Scoped Styles */
+/* All styles are scoped to #script-vault to prevent global interference */
+
+#script-vault .script-vault-container {
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -6,7 +9,7 @@
   background: var(--color-bg);
 }
 
-.script-vault-header {
+#script-vault .script-vault-header {
   display: flex;
   gap: 10px;
   margin-bottom: 15px;
@@ -14,7 +17,7 @@
   border-bottom: 2px solid var(--color-border-dark);
 }
 
-.script-vault-header button {
+#script-vault .script-vault-header button {
   flex: 1;
   padding: 8px 16px;
   background: var(--color-bg-btn);
@@ -25,23 +28,23 @@
   transition: all 0.2s;
 }
 
-.script-vault-header button:hover {
+#script-vault .script-vault-header button:hover {
   background: var(--color-bg-btn-hover);
   box-shadow: 0 0 8px var(--color-shadow-primary);
 }
 
-.script-vault-header button i {
+#script-vault .script-vault-header button i {
   margin-right: 6px;
 }
 
-.script-vault-content {
+#script-vault .script-vault-content {
   display: flex;
   gap: 15px;
   flex: 1;
   overflow: hidden;
 }
 
-.script-list {
+#script-vault .script-list {
   width: 250px;
   display: flex;
   flex-direction: column;
@@ -51,14 +54,14 @@
   padding: 10px;
 }
 
-.script-list h3 {
+#script-vault .script-list h3 {
   margin: 0 0 10px 0;
   padding-bottom: 8px;
   border-bottom: 1px solid var(--color-border-dark);
   font-size: 16px;
 }
 
-.script-list-items {
+#script-vault .script-list-items {
   flex: 1;
   overflow-y: auto;
   display: flex;
@@ -66,7 +69,7 @@
   gap: 5px;
 }
 
-.script-item {
+#script-vault .script-item {
   padding: 10px;
   background: var(--color-bg);
   border: 1px solid var(--color-border-light);
@@ -78,36 +81,36 @@
   gap: 8px;
 }
 
-.script-item:hover {
+#script-vault .script-item:hover {
   background: var(--color-bg-btn-hover);
   border-color: var(--color-border-highlight);
 }
 
-.script-item.selected {
+#script-vault .script-item.selected {
   background: var(--color-bg-btn-hover);
   border-color: var(--color-border-highlight-alt);
   box-shadow: 0 0 8px var(--color-shadow-primary);
 }
 
-.script-item i {
+#script-vault .script-item i {
   color: var(--color-text-light-2);
 }
 
-.script-name {
+#script-vault .script-name {
   flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.no-scripts {
+#script-vault .no-scripts {
   text-align: center;
   color: var(--color-text-dark-5);
   font-style: italic;
   padding: 20px 10px;
 }
 
-.script-editor {
+#script-vault .script-editor {
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -118,37 +121,37 @@
   overflow: hidden;
 }
 
-.editor-header {
+#script-vault .editor-header {
   display: flex;
   gap: 15px;
   margin-bottom: 15px;
   align-items: flex-start;
 }
 
-.editor-header .form-group {
+#script-vault .editor-header .form-group {
   flex: 1;
 }
 
-.editor-actions {
+#script-vault .editor-actions {
   display: flex;
   gap: 8px;
   align-items: flex-end;
 }
 
-.form-group {
+#script-vault .form-group {
   display: flex;
   flex-direction: column;
   gap: 6px;
   flex: 1;
 }
 
-.form-group label {
+#script-vault .form-group label {
   font-weight: bold;
   font-size: 13px;
   color: var(--color-text-light-0);
 }
 
-.form-group input[type="text"] {
+#script-vault .form-group input[type="text"] {
   padding: 8px 12px;
   background: var(--color-bg);
   border: 1px solid var(--color-border-dark);
@@ -157,13 +160,13 @@
   font-family: inherit;
 }
 
-.form-group input[type="text"]:focus {
+#script-vault .form-group input[type="text"]:focus {
   outline: none;
   border-color: var(--color-border-highlight);
   box-shadow: 0 0 5px var(--color-shadow-primary);
 }
 
-.form-group textarea {
+#script-vault .form-group textarea {
   flex: 1;
   padding: 12px;
   background: var(--color-bg);
@@ -175,13 +178,13 @@
   min-height: 300px;
 }
 
-.form-group textarea:focus {
+#script-vault .form-group textarea:focus {
   outline: none;
   border-color: var(--color-border-highlight);
   box-shadow: 0 0 5px var(--color-shadow-primary);
 }
 
-.editor-footer {
+#script-vault .editor-footer {
   display: flex;
   gap: 10px;
   margin-top: 15px;
@@ -189,7 +192,7 @@
   border-top: 1px solid var(--color-border-dark);
 }
 
-.editor-footer button {
+#script-vault .editor-footer button {
   flex: 1;
   padding: 10px 20px;
   border: 1px solid var(--color-border-dark);
@@ -200,27 +203,27 @@
   transition: all 0.2s;
 }
 
-.save-btn {
+#script-vault .save-btn {
   background: #2e7d32;
   color: white;
 }
 
-.save-btn:hover {
+#script-vault .save-btn:hover {
   background: #388e3c;
   box-shadow: 0 0 10px rgba(46, 125, 50, 0.5);
 }
 
-.run-btn {
+#script-vault .run-btn {
   background: #1565c0;
   color: white;
 }
 
-.run-btn:hover {
+#script-vault .run-btn:hover {
   background: #1976d2;
   box-shadow: 0 0 10px rgba(21, 101, 192, 0.5);
 }
 
-.delete-btn {
+#script-vault .delete-btn {
   background: #c62828;
   color: white;
   padding: 8px 16px;
@@ -231,12 +234,12 @@
   transition: all 0.2s;
 }
 
-.delete-btn:hover {
+#script-vault .delete-btn:hover {
   background: #d32f2f;
   box-shadow: 0 0 10px rgba(198, 40, 40, 0.5);
 }
 
-.usage-hint {
+#script-vault .usage-hint {
   margin-top: 12px;
   padding: 10px;
   background: var(--color-bg);
@@ -245,13 +248,13 @@
   font-size: 12px;
 }
 
-.usage-hint strong {
+#script-vault .usage-hint strong {
   display: block;
   margin-bottom: 5px;
   color: var(--color-text-light-1);
 }
 
-.usage-hint code {
+#script-vault .usage-hint code {
   display: inline-block;
   padding: 4px 8px;
   background: var(--color-bg-option);
@@ -261,7 +264,7 @@
   color: #4fc3f7;
 }
 
-.no-selection {
+#script-vault .no-selection {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -271,13 +274,13 @@
   text-align: center;
 }
 
-.no-selection i {
+#script-vault .no-selection i {
   font-size: 64px;
   margin-bottom: 20px;
   opacity: 0.3;
 }
 
-.no-selection p {
+#script-vault .no-selection p {
   font-size: 16px;
   max-width: 300px;
 }
