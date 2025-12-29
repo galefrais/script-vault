@@ -1,1 +1,31 @@
-
+{
+  "id": "script-vault",
+  "title": "Script Vault",
+  "description": "Securely store and execute scripts without exposing code to players. Perfect for creating trigger macros that call complex scripts.",
+  "version": "1.0.0",
+  "compatibility": {
+    "minimum": "13",
+    "verified": "13.351"
+  },
+  "authors": [
+    {
+      "name": "Your Name"
+    }
+  ],
+  "esmodules": [
+    "scripts/script-vault.js"
+  ],
+  "styles": [
+    "styles/script-vault.css"
+  ],
+  "languages": [
+    {
+      "lang": "en",
+      "name": "English",
+      "path": "lang/en.json"
+    }
+  ],
+  "url": "https://github.com/YOUR-USERNAME/script-vault",
+  "manifest": "https://raw.githubusercontent.com/YOUR-USERNAME/script-vault/main/module.json",
+  "download": "https://github.com/YOUR-USERNAME/script-vault/archive/refs/heads/main.zip"
+}
