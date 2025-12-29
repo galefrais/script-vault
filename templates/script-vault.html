@@ -1,1 +1,71 @@
+<div class="script-vault-container">
+  <div class="script-vault-header">
+    <button type="button" id="add-script" title="Add New Script">
+      <i class="fas fa-plus"></i> Add Script
+    </button>
+    <button type="button" id="export-scripts" title="Export All Scripts">
+      <i class="fas fa-file-export"></i> Export
+    </button>
+    <button type="button" id="import-scripts" title="Import Scripts">
+      <i class="fas fa-file-import"></i> Import
+    </button>
+  </div>
 
+  <div class="script-vault-content">
+    <div class="script-list">
+      <h3>Scripts</h3>
+      <div class="script-list-items">
+        {{#if scripts.length}}
+          {{#each scripts}}
+            <div class="script-item {{#if (eq ../currentScript.id this.id)}}selected{{/if}}" data-script-id="{{this.id}}">
+              <i class="fas fa-scroll"></i>
+              <span class="script-name">{{this.name}}</span>
+            </div>
+          {{/each}}
+        {{else}}
+          <p class="no-scripts">No scripts yet. Click "Add Script" to create one.</p>
+        {{/if}}
+      </div>
+    </div>
+
+    <div class="script-editor">
+      {{#if currentScript}}
+        <div class="editor-header">
+          <div class="form-group">
+            <label for="script-name">Script Name</label>
+            <input type="text" id="script-name" value="{{currentScript.name}}" placeholder="Enter script name...">
+          </div>
+          <div class="editor-actions">
+            <button type="button" id="delete-script" class="delete-btn" title="Delete Script">
+              <i class="fas fa-trash"></i> Delete
+            </button>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="script-code">Script Code</label>
+          <textarea id="script-code" placeholder="Enter your script code here...">{{currentScript.code}}</textarea>
+        </div>
+
+        <div class="editor-footer">
+          <button type="button" id="save-script" class="save-btn">
+            <i class="fas fa-save"></i> Save
+          </button>
+          <button type="button" id="run-script" class="run-btn">
+            <i class="fas fa-play"></i> Run
+          </button>
+        </div>
+
+        <div class="usage-hint">
+          <strong>Usage in macros:</strong>
+          <code>ScriptVault.run("{{currentScript.name}}")</code>
+        </div>
+      {{else}}
+        <div class="no-selection">
+          <i class="fas fa-vault"></i>
+          <p>Select a script from the list or create a new one to get started.</p>
+        </div>
+      {{/if}}
+    </div>
+  </div>
+</div>
