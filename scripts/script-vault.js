@@ -1,307 +1,294 @@
-.script-vault-container {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  padding: 10px;
-  background: var(--color-bg);
+class ScriptVaultApp extends FormApplication {
+  static get defaultOptions() {
+    return foundry.utils.mergeObject(super.defaultOptions, {
+      id: "script-vault",
+      title: "Script Vault",
+      template: "modules/script-vault/templates/script-vault.html",
+      width: 900,
+      height: 700,
+      resizable: true,
+      closeOnSubmit: false,
+      submitOnClose: false,
+      tabs: []
+    });
+  }
+
+  getData() {
+    const scripts = game.settings.get("script-vault", "scripts");
+    return {
+      scripts: Object.entries(scripts).map(([id, data]) => ({
+        id,
+        ...data
+      })),
+      currentScript: this.currentScript || null,
+      isGM: game.user.isGM
+    };
+  }
+
+  activateListeners(html) {
+    super.activateListeners(html);
+
+    // Add Script button
+    html.find("#add-script").click(() => this._onAddScript());
+
+    // Script list item clicks
+    html.find(".script-item").click((ev) => this._onSelectScript(ev));
+
+    // Delete script button
+    html.find("#delete-script").click(() => this._onDeleteScript());
+
+    // Save script button
+    html.find("#save-script").click(() => this._onSaveScript(html));
+
+    // Run script button
+    html.find("#run-script").click(() => this._onRunScript());
+
+    // Export button
+    html.find("#export-scripts").click(() => this._onExportScripts());
+
+    // Import button
+    html.find("#import-scripts").click(() => this._onImportScripts());
+
+    // Script name input change
+    html.find("#script-name").on("input", () => {
+      this.isModified = true;
+    });
+
+    // Script code textarea change
+    html.find("#script-code").on("input", () => {
+      this.isModified = true;
+    });
+  }
+
+  _onAddScript() {
+    const newId = foundry.utils.randomID();
+    this.currentScript = {
+      id: newId,
+      name: "New Script",
+      code: "// Your script code here\n// Access context with: ctx\n// Example: ctx.token, ctx.actor, ctx.user\n\nui.notifications.info('Script executed!');"
+    };
+    this.isModified = true;
+    this.render();
+  }
+
+  _onSelectScript(ev) {
+    const scriptId = $(ev.currentTarget).data("script-id");
+    const scripts = game.settings.get("script-vault", "scripts");
+    this.currentScript = { id: scriptId, ...scripts[scriptId] };
+    this.isModified = false;
+    this.render();
+  }
+
+  async _onDeleteScript() {
+    if (!this.currentScript) {
+      ui.notifications.warn("No script selected to delete.");
+      return;
+    }
+
+    const confirm = await Dialog.confirm({
+      title: "Delete Script",
+      content: `<p>Are you sure you want to delete <strong>${this.currentScript.name}</strong>?</p>`,
+      yes: () => true,
+      no: () => false
+    });
+
+    if (!confirm) return;
+
+    const scripts = game.settings.get("script-vault", "scripts");
+    delete scripts[this.currentScript.id];
+    await game.settings.set("script-vault", "scripts", scripts);
+
+    this.currentScript = null;
+    this.isModified = false;
+    ui.notifications.info(`Script deleted successfully.`);
+    this.render();
+  }
+
+  async _onSaveScript(html) {
+    if (!this.currentScript) {
+      ui.notifications.warn("No script to save.");
+      return;
+    }
+
+    const name = html.find("#script-name").val().trim();
+    const code = html.find("#script-code").val();
+
+    if (!name) {
+      ui.notifications.error("Script name cannot be empty.");
+      return;
+    }
+
+    const scripts = game.settings.get("script-vault", "scripts");
+    scripts[this.currentScript.id] = { name, code };
+    await game.settings.set("script-vault", "scripts", scripts);
+
+    this.currentScript.name = name;
+    this.currentScript.code = code;
+    this.isModified = false;
+    ui.notifications.info(`Script "${name}" saved successfully.`);
+    this.render();
+  }
+
+  async _onRunScript() {
+    if (!this.currentScript || !this.currentScript.code) {
+      ui.notifications.warn("No script selected to run.");
+      return;
+    }
+
+    try {
+      // Create context object
+      const ctx = {
+        token: canvas.tokens.controlled[0] || null,
+        actor: canvas.tokens.controlled[0]?.actor || game.user.character || null,
+        user: game.user,
+        scene: game.scenes.current,
+        game: game,
+        ui: ui,
+        canvas: canvas
+      };
+
+      // Execute the script
+      const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
+      const fn = new AsyncFunction("ctx", this.currentScript.code);
+      await fn(ctx);
+
+      ui.notifications.info(`Script "${this.currentScript.name}" executed successfully.`);
+    } catch (err) {
+      ui.notifications.error(`Script execution failed: ${err.message}`);
+      console.error("Script Vault execution error:", err);
+    }
+  }
+
+  async _onExportScripts() {
+    const scripts = game.settings.get("script-vault", "scripts");
+    const dataStr = JSON.stringify(scripts, null, 2);
+    const dataBlob = new Blob([dataStr], { type: "application/json" });
+    const url = URL.createObjectURL(dataBlob);
+    
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `script-vault-export-${Date.now()}.json`;
+    link.click();
+    
+    URL.revokeObjectURL(url);
+    ui.notifications.info("Scripts exported successfully.");
+  }
+
+  async _onImportScripts() {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "application/json";
+    
+    input.onchange = async (ev) => {
+      const file = ev.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        try {
+          const importedScripts = JSON.parse(e.target.result);
+          
+          const confirm = await Dialog.confirm({
+            title: "Import Scripts",
+            content: `<p>Import ${Object.keys(importedScripts).length} script(s)?</p><p><strong>Warning:</strong> This will merge with existing scripts. Duplicate IDs will be overwritten.</p>`,
+            yes: () => true,
+            no: () => false
+          });
+
+          if (!confirm) return;
+
+          const currentScripts = game.settings.get("script-vault", "scripts");
+          const mergedScripts = foundry.utils.mergeObject(currentScripts, importedScripts);
+          await game.settings.set("script-vault", "scripts", mergedScripts);
+
+          ui.notifications.info("Scripts imported successfully.");
+          this.render();
+        } catch (err) {
+          ui.notifications.error("Failed to import scripts. Invalid file format.");
+          console.error("Import error:", err);
+        }
+      };
+      
+      reader.readAsText(file);
+    };
+    
+    input.click();
+  }
 }
 
-.script-vault-header {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 15px;
-  padding-bottom: 10px;
-  border-bottom: 2px solid var(--color-border-dark);
+// Global API for running scripts from macros
+class ScriptVault {
+  static async run(scriptName, context = {}) {
+    const scripts = game.settings.get("script-vault", "scripts");
+    const script = Object.values(scripts).find(s => s.name === scriptName);
+
+    if (!script) {
+      ui.notifications.error(`Script "${scriptName}" not found in Script Vault.`);
+      return false;
+    }
+
+    try {
+      // Merge provided context with default context
+      const ctx = foundry.utils.mergeObject({
+        token: canvas.tokens.controlled[0] || null,
+        actor: canvas.tokens.controlled[0]?.actor || game.user.character || null,
+        user: game.user,
+        scene: game.scenes.current,
+        game: game,
+        ui: ui,
+        canvas: canvas
+      }, context);
+
+      // Execute the script
+      const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
+      const fn = new AsyncFunction("ctx", script.code);
+      await fn(ctx);
+
+      return true;
+    } catch (err) {
+      ui.notifications.error(`Script "${scriptName}" execution failed: ${err.message}`);
+      console.error("Script Vault execution error:", err);
+      return false;
+    }
+  }
+
+  static open() {
+    if (!game.user.isGM) {
+      ui.notifications.warn("Only GMs can access the Script Vault.");
+      return;
+    }
+    new ScriptVaultApp().render(true);
+  }
 }
 
-.script-vault-header button {
-  flex: 1;
-  padding: 8px 16px;
-  background: var(--color-bg-btn);
-  border: 1px solid var(--color-border-dark);
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: all 0.2s;
-}
+// Initialize the module
+Hooks.once("init", () => {
+  console.log("Script Vault | Initializing");
 
-.script-vault-header button:hover {
-  background: var(--color-bg-btn-hover);
-  box-shadow: 0 0 8px var(--color-shadow-primary);
-}
+  // Register settings
+  game.settings.register("script-vault", "scripts", {
+    name: "Stored Scripts",
+    scope: "world",
+    config: false,
+    type: Object,
+    default: {}
+  });
 
-.script-vault-header button i {
-  margin-right: 6px;
-}
+  // Make ScriptVault globally available
+  window.ScriptVault = ScriptVault;
+});
 
-.script-vault-content {
-  display: flex;
-  gap: 15px;
-  flex: 1;
-  overflow: hidden;
-}
+// Add button to settings sidebar
+Hooks.on("renderSettings", (app, html) => {
+  if (!game.user.isGM) return;
 
-.script-list {
-  width: 250px;
-  display: flex;
-  flex-direction: column;
-  background: var(--color-bg-option);
-  border: 1px solid var(--color-border-dark);
-  border-radius: 4px;
-  padding: 10px;
-}
+  const button = $(`
+    <button id="script-vault-button">
+      <i class="fas fa-vault"></i> Script Vault
+    </button>
+  `);
 
-.script-list h3 {
-  margin: 0 0 10px 0;
-  padding-bottom: 8px;
-  border-bottom: 1px solid var(--color-border-dark);
-  font-size: 16px;
-}
+  button.click(() => ScriptVault.open());
 
-.script-list-items {
-  flex: 1;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.script-item {
-  padding: 10px;
-  background: var(--color-bg);
-  border: 1px solid var(--color-border-light);
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.script-item:hover {
-  background: var(--color-bg-btn-hover);
-  border-color: var(--color-border-highlight);
-}
-
-.script-item.selected {
-  background: var(--color-bg-btn-hover);
-  border-color: var(--color-border-highlight-alt);
-  box-shadow: 0 0 8px var(--color-shadow-primary);
-}
-
-.script-item i {
-  color: var(--color-text-light-2);
-}
-
-.script-name {
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.no-scripts {
-  text-align: center;
-  color: var(--color-text-dark-5);
-  font-style: italic;
-  padding: 20px 10px;
-}
-
-.script-editor {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  background: var(--color-bg-option);
-  border: 1px solid var(--color-border-dark);
-  border-radius: 4px;
-  padding: 15px;
-  overflow: hidden;
-}
-
-.editor-header {
-  display: flex;
-  gap: 15px;
-  margin-bottom: 15px;
-  align-items: flex-start;
-}
-
-.editor-header .form-group {
-  flex: 1;
-}
-
-.editor-actions {
-  display: flex;
-  gap: 8px;
-  align-items: flex-end;
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  flex: 1;
-}
-
-.form-group label {
-  font-weight: bold;
-  font-size: 13px;
-  color: var(--color-text-light-0);
-}
-
-.form-group input[type="text"] {
-  padding: 8px 12px;
-  background: var(--color-bg);
-  border: 1px solid var(--color-border-dark);
-  border-radius: 4px;
-  font-size: 14px;
-  font-family: inherit;
-}
-
-.form-group input[type="text"]:focus {
-  outline: none;
-  border-color: var(--color-border-highlight);
-  box-shadow: 0 0 5px var(--color-shadow-primary);
-}
-
-.form-group textarea {
-  flex: 1;
-  padding: 12px;
-  background: var(--color-bg);
-  border: 1px solid var(--color-border-dark);
-  border-radius: 4px;
-  font-size: 13px;
-  font-family: 'Courier New', monospace;
-  resize: none;
-  min-height: 300px;
-}
-
-.form-group textarea:focus {
-  outline: none;
-  border-color: var(--color-border-highlight);
-  box-shadow: 0 0 5px var(--color-shadow-primary);
-}
-
-.editor-footer {
-  display: flex;
-  gap: 10px;
-  margin-top: 15px;
-  padding-top: 15px;
-  border-top: 1px solid var(--color-border-dark);
-}
-
-.editor-footer button {
-  flex: 1;
-  padding: 10px 20px;
-  border: 1px solid var(--color-border-dark);
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: bold;
-  transition: all 0.2s;
-}
-
-.save-btn {
-  background: #2e7d32;
-  color: white;
-}
-
-.save-btn:hover {
-  background: #388e3c;
-  box-shadow: 0 0 10px rgba(46, 125, 50, 0.5);
-}
-
-.run-btn {
-  background: #1565c0;
-  color: white;
-}
-
-.run-btn:hover {
-  background: #1976d2;
-  box-shadow: 0 0 10px rgba(21, 101, 192, 0.5);
-}
-
-.delete-btn {
-  background: #c62828;
-  color: white;
-  padding: 8px 16px;
-  border: 1px solid var(--color-border-dark);
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 13px;
-  transition: all 0.2s;
-}
-
-.delete-btn:hover {
-  background: #d32f2f;
-  box-shadow: 0 0 10px rgba(198, 40, 40, 0.5);
-}
-
-.usage-hint {
-  margin-top: 12px;
-  padding: 10px;
-  background: var(--color-bg);
-  border: 1px solid var(--color-border-dark);
-  border-radius: 4px;
-  font-size: 12px;
-}
-
-.usage-hint strong {
-  display: block;
-  margin-bottom: 5px;
-  color: var(--color-text-light-1);
-}
-
-.usage-hint code {
-  display: inline-block;
-  padding: 4px 8px;
-  background: var(--color-bg-option);
-  border: 1px solid var(--color-border-light);
-  border-radius: 3px;
-  font-family: 'Courier New', monospace;
-  color: #4fc3f7;
-}
-
-.no-selection {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  color: var(--color-text-dark-5);
-  text-align: center;
-}
-
-.no-selection i {
-  font-size: 64px;
-  margin-bottom: 20px;
-  opacity: 0.3;
-}
-
-.no-selection p {
-  font-size: 16px;
-  max-width: 300px;
-}
-
-/* Settings button styling */
-#script-vault-button {
-  width: 100%;
-  margin-top: 10px;
-  padding: 8px;
-  background: var(--color-bg-btn);
-  border: 1px solid var(--color-border-dark);
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-  text-align: left;
-  transition: all 0.2s;
-}
-
-#script-vault-button:hover {
-  background: var(--color-bg-btn-hover);
-  box-shadow: 0 0 8px var(--color-shadow-primary);
-}
-
-#script-vault-button i {
-  margin-right: 8px;
-  color: var(--color-text-light-2);
-}
+  html.find("#settings-game").append(button);
+});
