@@ -1,15 +1,15 @@
 {
   "id": "script-vault",
   "title": "Script Vault",
-  "description": "Store, manage, and auto-run custom scripts with startup support for FoundryVTT",
-  "version": "2.0.0",
+  "description": "Securely store and execute scripts without exposing code to players. Perfect for creating trigger macros that call complex scripts.",
+  "version": "1.0.0",
   "compatibility": {
-    "minimum": "10",
-    "verified": "12"
+    "minimum": "13",
+    "verified": "13.351"
   },
   "authors": [
     {
-      "name": "galefrais"
+      "name": "Your Name"
     }
   ],
   "esmodules": [
@@ -25,5 +25,7 @@
       "path": "lang/en.json"
     }
   ],
-  "socket": true
+  "url": "https://github.com/galefrais/script-vault",
+  "manifest": "https://raw.githubusercontent.com/galefrais/script-vault/main/module.json",
+  "download": "https://github.com/galefrais/script-vault/archive/refs/heads/main.zip"
 }

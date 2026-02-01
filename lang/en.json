@@ -1,37 +1,6 @@
 {
-    "SCRIPT-VAULT": {
-        "title": "Script Vault",
-        "addScript": "New Script",
-        "export": "Export",
-        "import": "Import",
-        "save": "Save",
-        "run": "Run",
-        "delete": "Delete",
-        "startup": "Startup",
-        "startupOn": "Startup On",
-        "startupOff": "Startup Off",
-        "scriptName": "Script Name",
-        "description": "Description (optional)",
-        "codePlaceholder": "// Enter your script code here...",
-        "noScripts": "No scripts yet",
-        "createFirst": "Click 'New Script' to create one",
-        "selectScript": "Select a script from the sidebar",
-        "orCreate": "or create a new one to get started",
-        "confirmDelete": "Are you sure you want to delete this script?",
-        "cannotUndo": "This cannot be undone.",
-        "scriptSaved": "Script saved!",
-        "scriptDeleted": "Script deleted",
-        "scriptsExported": "Scripts exported!",
-        "scriptsImported": "Scripts imported!",
-        "startupEnabled": "Startup enabled",
-        "startupDisabled": "Startup disabled",
-        "errorNotFound": "Script not found!",
-        "errorExecution": "Error executing script",
-        "settings": {
-            "startupEnabled": {
-                "name": "Enable Startup Scripts",
-                "hint": "Allow scripts marked as 'startup' to run automatically when the world loads"
-            }
-        }
-    }
+  "script-vault": {
+    "title": "Script Vault",
+    "description": "Securely store and execute scripts without exposing code to players."
+  }
 }
