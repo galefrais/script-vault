@@ -647,7 +647,14 @@ Hooks.once('init', () => {
 Hooks.once('ready', () => {
     // Make globally available
     window.ScriptVault = ScriptVault;
+    window.ScriptVaultUI = ScriptVaultUI;
     game.ScriptVault = ScriptVault;
+    game.ScriptVaultUI = ScriptVaultUI;
+    
+    // Add backward-compatible open() function for old macros
+    ScriptVault.open = function() {
+        new ScriptVaultUI().render(true);
+    };
     
     console.log("Script Vault | Ready");
     
