@@ -25,5 +25,8 @@
       "path": "lang/en.json"
     }
   ],
+  "url": "https://github.com/galefrais/script-vault",
+  "manifest": "https://raw.githubusercontent.com/galefrais/script-vault/main/module.json",
+  "download": "https://github.com/galefrais/script-vault/archive/refs/heads/main.zip"
   "socket": true
 }
