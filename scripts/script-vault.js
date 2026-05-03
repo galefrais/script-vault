@@ -142,7 +142,7 @@ class ScriptVault {
     // SCRIPT EXECUTION
     // =========================================================================
 
-    static async run(name) {
+    static async run(name, args = {}) {
         const script = this.getScript(name);
         if (!script) {
             ui.notifications.error(`Script "${name}" not found!`);
@@ -153,9 +153,9 @@ class ScriptVault {
         console.log(`Script Vault | Executing: ${name}`);
         
         try {
-            // Create async function and execute
-            const asyncFunc = new Function('return (async () => {' + script.code + '\n})()');
-            await asyncFunc();
+            // Create async function and execute, injecting `args` into scope
+            const asyncFunc = new Function('args', 'return (async () => {' + script.code + '\n})()');
+            await asyncFunc(args);
             console.log(`Script Vault | Completed: ${name}`);
             return true;
         } catch (error) {
