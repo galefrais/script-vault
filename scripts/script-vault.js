@@ -207,9 +207,6 @@ class ScriptVault {
     }
 
     static async runStartupScripts() {
-        // Only GM runs startup scripts
-        if (!game.user.isGM) return;
-        
         // Check if startup is enabled globally
         if (!game.settings.get(this.ID, 'startupEnabled')) {
             console.log("Script Vault | Startup scripts disabled in settings");
@@ -222,12 +219,26 @@ class ScriptVault {
             return;
         }
         
-        console.log(`Script Vault | Running ${startupScripts.length} startup script(s)...`);
+        // Filter scripts based on client type. Scripts with runOnAllClients
+        // execute on every connected client (useful for registering Hooks
+        // that need to listen for player-side events). Without that flag,
+        // only the GM's client runs the script.
+        const allScripts = this.getScripts();
+        const scriptsToRun = startupScripts.filter(name => {
+            const script = allScripts[name];
+            if (!script) return false;
+            const runOnAllClients = script.runOnAllClients ?? false;
+            return runOnAllClients || game.user.isGM;
+        });
+        
+        if (scriptsToRun.length === 0) return;
+        
+        console.log(`Script Vault | Running ${scriptsToRun.length} startup script(s)...`);
         
         let successCount = 0;
         let failCount = 0;
         
-        for (const name of startupScripts) {
+        for (const name of scriptsToRun) {
             const script = this.getScript(name);
             if (script) {
                 const success = await this.run(name);
@@ -239,12 +250,38 @@ class ScriptVault {
             }
         }
         
-        if (successCount > 0) {
-            ui.notifications.info(`Script Vault: ${successCount} startup script(s) loaded`);
+        // Only the GM gets the success/fail toast to avoid spamming players
+        if (game.user.isGM) {
+            if (successCount > 0) {
+                ui.notifications.info(`Script Vault: ${successCount} startup script(s) loaded`);
+            }
+            if (failCount > 0) {
+                ui.notifications.warn(`Script Vault: ${failCount} startup script(s) failed`);
+            }
         }
-        if (failCount > 0) {
-            ui.notifications.warn(`Script Vault: ${failCount} startup script(s) failed`);
+    }
+    
+    /**
+     * Mark a startup script to run on all clients (not just GM).
+     * Use this for scripts that register Hooks for player-side events.
+     * Example:
+     *   await ScriptVault.setRunOnAllClients('Rage Combat Hooks', true);
+     */
+    static async setRunOnAllClients(name, value) {
+        if (!game.user.isGM) {
+            ui.notifications.error("Only the GM can change script settings.");
+            return false;
         }
+        const scripts = this.getScripts();
+        if (!scripts[name]) {
+            ui.notifications.error(`Script "${name}" not found.`);
+            return false;
+        }
+        scripts[name].runOnAllClients = !!value;
+        scripts[name].updatedAt = Date.now();
+        await game.settings.set(this.ID, 'scripts', scripts);
+        ui.notifications.info(`Script "${name}": runOnAllClients = ${!!value}`);
+        return true;
     }
 
     // =========================================================================
@@ -666,29 +703,44 @@ Hooks.once('ready', () => {
 
 // Add button to token controls
 Hooks.on('getSceneControlButtons', (controls) => {
-    const tokenControls = controls.find(c => c.name === 'token');
-    if (tokenControls && game.user.isGM) {
-        tokenControls.tools.push({
-            name: 'script-vault',
-            title: 'Script Vault',
-            icon: 'fas fa-scroll',
-            button: true,
-            onClick: () => new ScriptVaultUI().render(true)
-        });
+    if (!game.user.isGM) return;
+    // v13: controls is an object keyed by control name; tools is also an object
+    const tokenControls = Array.isArray(controls)
+        ? controls.find(c => c.name === 'token')
+        : controls?.tokens ?? controls?.token;
+    if (!tokenControls) return;
+    const tool = {
+        name: 'script-vault',
+        title: 'Script Vault',
+        icon: 'fas fa-scroll',
+        button: true,
+        onClick: () => new ScriptVaultUI().render(true)
+    };
+    if (Array.isArray(tokenControls.tools)) {
+        tokenControls.tools.push(tool);
+    } else if (tokenControls.tools && typeof tokenControls.tools === 'object') {
+        tokenControls.tools['script-vault'] = tool;
     }
 });
 
 // Also add to notes/journal controls as fallback
 Hooks.on('getSceneControlButtons', (controls) => {
-    const notesControls = controls.find(c => c.name === 'notes');
-    if (notesControls && game.user.isGM) {
-        notesControls.tools.push({
-            name: 'script-vault',
-            title: 'Script Vault',
-            icon: 'fas fa-scroll',
-            button: true,
-            onClick: () => new ScriptVaultUI().render(true)
-        });
+    if (!game.user.isGM) return;
+    const notesControls = Array.isArray(controls)
+        ? controls.find(c => c.name === 'notes')
+        : controls?.notes;
+    if (!notesControls) return;
+    const tool = {
+        name: 'script-vault',
+        title: 'Script Vault',
+        icon: 'fas fa-scroll',
+        button: true,
+        onClick: () => new ScriptVaultUI().render(true)
+    };
+    if (Array.isArray(notesControls.tools)) {
+        notesControls.tools.push(tool);
+    } else if (notesControls.tools && typeof notesControls.tools === 'object') {
+        notesControls.tools['script-vault'] = tool;
     }
 });
 
