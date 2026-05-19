@@ -1,5 +1,5 @@
 // =============================================================================
-// SCRIPT VAULT v2.0 - Enhanced with Startup Scripts
+// SCRIPT VAULT v2.1 - Enhanced with Startup Scripts (Foundry v14 compatible)
 // =============================================================================
 
 class ScriptVault {
@@ -293,7 +293,7 @@ class ScriptVault {
             scripts: this.getScripts(),
             startupScripts: this.getStartupScripts(),
             exportedAt: Date.now(),
-            version: '2.0.0'
+            version: '2.1.0'
         };
         
         const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -429,7 +429,7 @@ if (!window.stringTrapSystemLoaded) {
                         }
                         
                         if (saveResult.total < dc) {
-                            await token.actor.createEmbeddedDocuments("ActiveEffect", [{name: "Paralyzed (String Trap)", icon: "icons/svg/paralysis.svg", statuses: ["paralyzed"], changes: []}]);
+                            await token.actor.createEmbeddedDocuments("ActiveEffect", [{name: "Paralyzed (String Trap)", img: "icons/svg/paralysis.svg", statuses: ["paralyzed"], changes: []}]);
                             ui.notifications.error(tokenDoc.name + " is PARALYZED!");
                             ChatMessage.create({content: '<div style="text-align:center;padding:10px;background:rgba(0,255,136,0.2);border:2px solid #00ff88;"><strong>⚡ PARALYZED!</strong><br/>' + tokenDoc.name + ' failed DC ' + dc + ' (rolled ' + saveResult.total + ')</div>'});
                         } else {
@@ -445,7 +445,7 @@ if (!window.stringTrapSystemLoaded) {
                     if (token?.actor && !token.actor.effects.find(e => e.flags?.["string-trap"]?.dotTileId === tile.id)) {
                         await token.actor.createEmbeddedDocuments("ActiveEffect", [{
                             name: "🕸️ String Trap DoT",
-                            icon: "icons/magic/unholy/projectile-helix-blood-purple.webp",
+                            img: "icons/magic/unholy/projectile-helix-blood-purple.webp",
                             duration: {rounds: 999},
                             flags: {"string-trap": {dotTileId: tile.id, damage: flags.damage, damageType: flags.damageType}}
                         }]);
@@ -509,7 +509,7 @@ class ScriptVaultUI extends Application {
     }
 
     static get defaultOptions() {
-        return mergeObject(super.defaultOptions, {
+        return foundry.utils.mergeObject(super.defaultOptions, {
             id: 'script-vault-ui',
             title: 'Script Vault',
             template: 'modules/script-vault/templates/vault.html',
