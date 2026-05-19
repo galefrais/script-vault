@@ -58,6 +58,7 @@
         <!-- Editor Panel -->
         <div class="sv-editor">
             {{#if selectedScript}}
+            <!-- Script Name -->
             <div class="sv-editor-header">
                 <input type="text" class="editor-name" value="{{selectedScript.name}}" placeholder="Script Name">
                 {{#if isStartupEnabled}}
@@ -65,14 +66,28 @@
                 {{/if}}
             </div>
             
+            <!-- Description -->
             <div class="sv-editor-description">
                 <input type="text" class="editor-description" value="{{selectedScript.description}}" placeholder="Description (optional)">
             </div>
             
+            <!-- Code Editor -->
             <div class="sv-editor-code">
+                <button type="button" class="sv-find-toggle" title="Find in script (Ctrl+F)">
+                    <i class="fas fa-search"></i>
+                </button>
+                <div class="sv-find-bar" style="display: none;">
+                    <input type="text" class="sv-find-input" placeholder="Find in script...">
+                    <span class="sv-find-count">0/0</span>
+                    <button type="button" class="sv-find-prev" title="Previous (Shift+Enter)"><i class="fas fa-chevron-up"></i></button>
+                    <button type="button" class="sv-find-next" title="Next (Enter)"><i class="fas fa-chevron-down"></i></button>
+                    <button type="button" class="sv-find-case" title="Case sensitive">Aa</button>
+                    <button type="button" class="sv-find-close" title="Close (Esc)"><i class="fas fa-times"></i></button>
+                </div>
                 <textarea class="editor-code" spellcheck="false" placeholder="// Enter your script code here...">{{selectedScript.code}}</textarea>
             </div>
             
+            <!-- Action Buttons -->
             <div class="sv-editor-actions">
                 <button class="btn-save" title="Save changes (Ctrl+S)">
                     <i class="fas fa-save"></i> Save
@@ -88,6 +103,7 @@
                 </button>
             </div>
             {{else}}
+            <!-- Empty State -->
             <div class="sv-empty-state">
                 <i class="fas fa-code"></i>
                 <p>Select a script from the sidebar</p>
