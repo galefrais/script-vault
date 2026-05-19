@@ -1,5 +1,6 @@
 // =============================================================================
-// SCRIPT VAULT v2.1 - Enhanced with Startup Scripts (Foundry v14 compatible)
+// SCRIPT VAULT v2.2 - Enhanced with Startup Scripts, Sidebar Search, Find-in-Script
+// Foundry v14 compatible
 // =============================================================================
 
 class ScriptVault {
@@ -293,7 +294,7 @@ class ScriptVault {
             scripts: this.getScripts(),
             startupScripts: this.getStartupScripts(),
             exportedAt: Date.now(),
-            version: '2.1.0'
+            version: '2.2.0'
         };
         
         const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -576,7 +577,8 @@ class ScriptVaultUI extends Application {
     activateListeners(html) {
         super.activateListeners(html);
         
-        // Search input
+        // ====== SIDEBAR SEARCH (filter script list) ======
+        
         const searchInput = html.find('.sv-search-input');
         searchInput.on('input', (ev) => {
             this._searchQuery = ev.target.value;
@@ -595,30 +597,165 @@ class ScriptVaultUI extends Application {
             }, 0);
         }
         
-        // Clear search
         html.find('.sv-search-clear').on('click', () => {
             this._searchQuery = '';
             this.render(false);
         });
         
-        // Script list selection
+        // ====== SCRIPT LIST + TOOLBAR ======
+        
         html.find('.script-item').on('click', (ev) => {
             const name = ev.currentTarget.dataset.name;
             this._selectScript(name);
         });
         
-        // Toolbar buttons
         html.find('.btn-add').on('click', () => this._addScript());
         html.find('.btn-export').on('click', () => ScriptVault.exportScripts());
         html.find('.btn-import').on('click', () => this._importScripts());
         
-        // Editor buttons
         html.find('.btn-save').on('click', () => this._saveCurrentScript(html));
         html.find('.btn-run').on('click', () => this._runCurrentScript());
         html.find('.btn-startup').on('click', () => this._toggleStartup());
         html.find('.btn-delete').on('click', () => this._deleteCurrentScript());
         
-        // Ctrl+S / Cmd+S to save while focused in an editor field
+        // ====== FIND IN SCRIPT (Ctrl+F inside the code editor) ======
+        
+        let findMatches = [];
+        let findIndex = -1;
+        let findCaseSensitive = false;
+        
+        const findBar = html.find('.sv-find-bar');
+        const findToggle = html.find('.sv-find-toggle');
+        const findInput = html.find('.sv-find-input');
+        const findCount = html.find('.sv-find-count');
+        const codeTextarea = html.find('.editor-code')[0];
+        
+        const updateMatches = () => {
+            const query = findInput.val();
+            findMatches = [];
+            findIndex = -1;
+            
+            if (!query || !codeTextarea) {
+                findCount.text('0/0');
+                findInput.removeClass('no-match');
+                return;
+            }
+            
+            const text = codeTextarea.value;
+            const haystack = findCaseSensitive ? text : text.toLowerCase();
+            const needle = findCaseSensitive ? query : query.toLowerCase();
+            
+            let idx = 0;
+            while (needle.length && (idx = haystack.indexOf(needle, idx)) !== -1) {
+                findMatches.push([idx, idx + needle.length]);
+                idx += needle.length;
+            }
+            
+            if (findMatches.length > 0) {
+                findIndex = 0;
+                findInput.removeClass('no-match');
+                jumpToMatch();
+            } else {
+                findCount.text('0/0');
+                findInput.addClass('no-match');
+            }
+        };
+        
+        const jumpToMatch = () => {
+            if (findIndex < 0 || findIndex >= findMatches.length || !codeTextarea) return;
+            const [start, end] = findMatches[findIndex];
+            
+            codeTextarea.focus();
+            codeTextarea.setSelectionRange(start, end);
+            
+            // Scroll the matched line roughly into the middle of the textarea
+            const textBefore = codeTextarea.value.substring(0, start);
+            const linesBefore = (textBefore.match(/\n/g) || []).length;
+            const lineHeight = parseFloat(getComputedStyle(codeTextarea).lineHeight) || 19.5;
+            const target = (linesBefore * lineHeight) - (codeTextarea.clientHeight / 2);
+            codeTextarea.scrollTop = Math.max(0, target);
+            
+            findCount.text(`${findIndex + 1}/${findMatches.length}`);
+            
+            // Return focus to find input so Enter keeps cycling
+            setTimeout(() => findInput.focus(), 0);
+        };
+        
+        const nextMatch = () => {
+            if (findMatches.length === 0) return;
+            findIndex = (findIndex + 1) % findMatches.length;
+            jumpToMatch();
+        };
+        
+        const prevMatch = () => {
+            if (findMatches.length === 0) return;
+            findIndex = (findIndex - 1 + findMatches.length) % findMatches.length;
+            jumpToMatch();
+        };
+        
+        const openFind = () => {
+            findBar.show();
+            findToggle.hide();
+            
+            // Seed with any single-line selection from the textarea
+            if (codeTextarea && codeTextarea.selectionStart !== codeTextarea.selectionEnd) {
+                const selected = codeTextarea.value.substring(codeTextarea.selectionStart, codeTextarea.selectionEnd);
+                if (selected && !selected.includes('\n')) {
+                    findInput.val(selected);
+                }
+            }
+            
+            findInput.focus().select();
+            updateMatches();
+        };
+        
+        const closeFind = () => {
+            findBar.hide();
+            findToggle.show();
+            findInput.val('').removeClass('no-match');
+            findMatches = [];
+            findIndex = -1;
+            findCount.text('0/0');
+            if (codeTextarea) codeTextarea.focus();
+        };
+        
+        findToggle.on('click', openFind);
+        findInput.on('input', updateMatches);
+        
+        findInput.on('keydown', (ev) => {
+            if (ev.key === 'Enter') {
+                ev.preventDefault();
+                if (ev.shiftKey) prevMatch();
+                else nextMatch();
+            } else if (ev.key === 'Escape') {
+                ev.preventDefault();
+                closeFind();
+            }
+        });
+        
+        html.find('.sv-find-next').on('click', nextMatch);
+        html.find('.sv-find-prev').on('click', prevMatch);
+        html.find('.sv-find-close').on('click', closeFind);
+        html.find('.sv-find-case').on('click', (ev) => {
+            findCaseSensitive = !findCaseSensitive;
+            $(ev.currentTarget).toggleClass('active', findCaseSensitive);
+            updateMatches();
+        });
+        
+        // ====== TEXTAREA SHORTCUTS ======
+        
+        // Ctrl+F opens find bar; Escape closes if open
+        html.find('.editor-code').on('keydown', (ev) => {
+            if ((ev.ctrlKey || ev.metaKey) && ev.key === 'f') {
+                ev.preventDefault();
+                openFind();
+            } else if (ev.key === 'Escape' && findBar.is(':visible')) {
+                ev.preventDefault();
+                closeFind();
+            }
+        });
+        
+        // Ctrl+S saves
         html.find('.editor-code, .editor-name, .editor-description').on('keydown', (ev) => {
             if ((ev.ctrlKey || ev.metaKey) && ev.key === 's') {
                 ev.preventDefault();
@@ -626,7 +763,7 @@ class ScriptVaultUI extends Application {
             }
         });
         
-        // Tab key in the code editor inserts 4 spaces instead of jumping focus
+        // Tab inserts 4 spaces instead of jumping focus
         html.find('.editor-code').on('keydown', (ev) => {
             if (ev.key === 'Tab') {
                 ev.preventDefault();
@@ -638,7 +775,8 @@ class ScriptVaultUI extends Application {
             }
         });
         
-        // Load first script if available and none selected
+        // ====== AUTO-SELECT FIRST SCRIPT ======
+        
         if (!this._currentScript) {
             const firstScript = html.find('.script-item').first();
             if (firstScript.length) {
