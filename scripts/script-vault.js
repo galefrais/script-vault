@@ -506,6 +506,7 @@ class ScriptVaultUI extends Application {
     constructor(options = {}) {
         super(options);
         this._currentScript = null;
+        this._searchQuery = '';
     }
 
     static get defaultOptions() {
@@ -513,8 +514,8 @@ class ScriptVaultUI extends Application {
             id: 'script-vault-ui',
             title: 'Script Vault',
             template: 'modules/script-vault/templates/vault.html',
-            width: 800,
-            height: 650,
+            width: 850,
+            height: 700,
             resizable: true,
             classes: ['script-vault']
         });
@@ -523,24 +524,82 @@ class ScriptVaultUI extends Application {
     getData() {
         const scripts = ScriptVault.getScripts();
         const startupScripts = ScriptVault.getStartupScripts();
+        const q = (this._searchQuery || '').toLowerCase().trim();
         
-        const scriptList = Object.values(scripts)
-            .map(s => ({
+        let scriptList = Object.values(scripts).map(s => {
+            const item = {
                 ...s,
                 isStartup: startupScripts.includes(s.name)
-            }))
-            .sort((a, b) => a.name.localeCompare(b.name));
+            };
+            
+            if (q) {
+                const name = (s.name || '').toLowerCase();
+                const desc = (s.description || '').toLowerCase();
+                const code = (s.code || '').toLowerCase();
+                
+                // Count occurrences of q in code (for the match badge)
+                let codeMatches = 0;
+                if (code) {
+                    let idx = 0;
+                    while ((idx = code.indexOf(q, idx)) !== -1) {
+                        codeMatches++;
+                        idx += q.length;
+                    }
+                }
+                
+                item._nameMatch = name.includes(q);
+                item._descMatch = desc.includes(q);
+                item.codeMatches = codeMatches;
+            }
+            
+            return item;
+        });
+        
+        // Filter by query if one is set
+        if (q) {
+            scriptList = scriptList.filter(s => s._nameMatch || s._descMatch || s.codeMatches > 0);
+        }
+        
+        scriptList.sort((a, b) => a.name.localeCompare(b.name));
         
         return {
             scripts: scriptList,
+            totalCount: Object.keys(scripts).length,
             currentScript: this._currentScript,
             selectedScript: this._currentScript ? ScriptVault.getScript(this._currentScript) : null,
-            isStartupEnabled: this._currentScript ? ScriptVault.isStartupEnabled(this._currentScript) : false
+            isStartupEnabled: this._currentScript ? ScriptVault.isStartupEnabled(this._currentScript) : false,
+            searchQuery: this._searchQuery,
+            hasSearch: !!q
         };
     }
 
     activateListeners(html) {
         super.activateListeners(html);
+        
+        // Search input
+        const searchInput = html.find('.sv-search-input');
+        searchInput.on('input', (ev) => {
+            this._searchQuery = ev.target.value;
+            this.render(false);
+        });
+        
+        // Restore focus + caret after re-render when searching
+        if (this._searchQuery) {
+            setTimeout(() => {
+                const el = this.element.find('.sv-search-input')[0];
+                if (el) {
+                    el.focus();
+                    const len = this._searchQuery.length;
+                    el.setSelectionRange(len, len);
+                }
+            }, 0);
+        }
+        
+        // Clear search
+        html.find('.sv-search-clear').on('click', () => {
+            this._searchQuery = '';
+            this.render(false);
+        });
         
         // Script list selection
         html.find('.script-item').on('click', (ev) => {
@@ -558,6 +617,26 @@ class ScriptVaultUI extends Application {
         html.find('.btn-run').on('click', () => this._runCurrentScript());
         html.find('.btn-startup').on('click', () => this._toggleStartup());
         html.find('.btn-delete').on('click', () => this._deleteCurrentScript());
+        
+        // Ctrl+S / Cmd+S to save while focused in an editor field
+        html.find('.editor-code, .editor-name, .editor-description').on('keydown', (ev) => {
+            if ((ev.ctrlKey || ev.metaKey) && ev.key === 's') {
+                ev.preventDefault();
+                this._saveCurrentScript(html);
+            }
+        });
+        
+        // Tab key in the code editor inserts 4 spaces instead of jumping focus
+        html.find('.editor-code').on('keydown', (ev) => {
+            if (ev.key === 'Tab') {
+                ev.preventDefault();
+                const ta = ev.target;
+                const start = ta.selectionStart;
+                const end = ta.selectionEnd;
+                ta.value = ta.value.substring(0, start) + '    ' + ta.value.substring(end);
+                ta.selectionStart = ta.selectionEnd = start + 4;
+            }
+        });
         
         // Load first script if available and none selected
         if (!this._currentScript) {
