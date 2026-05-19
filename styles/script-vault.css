@@ -1,5 +1,5 @@
 /* =============================================================================
-   SCRIPT VAULT v2.1 - Stylesheet
+   SCRIPT VAULT v2.2 - Stylesheet
    ============================================================================= */
 
 /* Main Window */
@@ -89,7 +89,7 @@
     letter-spacing: 0.3px;
 }
 
-/* Search bar */
+/* Sidebar search bar (filter script list) */
 .sv-search {
     position: relative;
     padding: 8px 10px;
@@ -112,7 +112,7 @@
     background: #0d1117;
     border: 1px solid #0f3460;
     border-radius: 4px;
-    color: #e0e0e0;
+    color: #e0e0e0 !important;
     padding: 6px 28px 6px 28px;
     font-size: 12px;
     outline: none;
@@ -201,7 +201,7 @@
     font-size: 13px;
 }
 
-/* Match badge - count of search hits in code */
+/* Match badge - count of search hits inside a script's code */
 .script-item .match-badge {
     flex-shrink: 0;
     font-size: 10px;
@@ -277,10 +277,12 @@
     border-color: #0f3460;
 }
 
+/* Code editor area (with find-in-script overlay) */
 .sv-editor-code {
     flex: 1;
     min-height: 0;
     margin-bottom: 10px;
+    position: relative;
 }
 
 .sv-editor-code textarea,
@@ -313,6 +315,122 @@
 .sv-editor-code textarea:focus {
     outline: none;
     border-color: #e94560;
+}
+
+/* Find-in-script: small floating toggle in top-right of code area */
+.sv-find-toggle {
+    position: absolute;
+    top: 8px;
+    right: 16px;
+    z-index: 9;
+    background: #16213e;
+    border: 1px solid #0f3460;
+    border-radius: 4px;
+    color: #c9d1d9;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    opacity: 0.6;
+    transition: all 0.15s ease;
+}
+
+.sv-find-toggle:hover {
+    opacity: 1;
+    border-color: #e94560;
+    color: #e94560;
+}
+
+/* Find bar - replaces the toggle when open */
+.sv-find-bar {
+    position: absolute;
+    top: 8px;
+    right: 16px;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    background: #16213e;
+    border: 1px solid #0f3460;
+    border-radius: 4px;
+    padding: 4px 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.sv-find-input {
+    background: #0d1117;
+    border: 1px solid #0f3460;
+    border-radius: 3px;
+    color: #c9d1d9 !important;
+    padding: 4px 8px;
+    font-size: 12px;
+    outline: none;
+    width: 200px;
+    font-family: inherit;
+}
+
+.sv-find-input::placeholder {
+    color: #5a6a8a;
+}
+
+.sv-find-input:focus {
+    border-color: #e94560;
+}
+
+.sv-find-input.no-match {
+    border-color: #da3633;
+    color: #ff8a85 !important;
+}
+
+.sv-find-count {
+    color: #aaa;
+    font-size: 11px;
+    padding: 0 6px;
+    min-width: 42px;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+}
+
+.sv-find-bar button {
+    background: transparent;
+    border: none;
+    color: #c9d1d9;
+    cursor: pointer;
+    padding: 0;
+    border-radius: 3px;
+    font-size: 11px;
+    line-height: 1;
+    width: 26px;
+    height: 26px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: none;
+    font-weight: normal;
+}
+
+.sv-find-bar button:hover {
+    background: #0f3460;
+    color: #e94560;
+}
+
+.sv-find-bar .sv-find-case {
+    font-weight: bold;
+    font-size: 11px;
+    font-family: inherit;
+}
+
+.sv-find-bar .sv-find-case.active {
+    background: #e94560;
+    color: #fff;
+}
+
+.sv-find-bar .sv-find-close:hover {
+    color: #f85149;
 }
 
 /* Editor Actions */
