@@ -17,21 +17,40 @@
         <!-- Sidebar - Script List -->
         <div class="sv-sidebar">
             <div class="sv-sidebar-header">
-                <i class="fas fa-scroll"></i> Scripts
+                <span><i class="fas fa-scroll"></i> Scripts</span>
+                <span class="sv-script-count">{{#if hasSearch}}{{scripts.length}}/{{totalCount}}{{else}}{{totalCount}}{{/if}}</span>
             </div>
+            
+            <div class="sv-search">
+                <i class="fas fa-search sv-search-icon"></i>
+                <input type="text" class="sv-search-input" placeholder="Search name, description, code..." value="{{searchQuery}}">
+                {{#if hasSearch}}
+                <button type="button" class="sv-search-clear" title="Clear search"><i class="fas fa-times"></i></button>
+                {{/if}}
+            </div>
+            
             <div class="sv-script-list">
                 {{#each scripts}}
                 <div class="script-item {{#if (eq ../currentScript this.name)}}active{{/if}}" data-name="{{this.name}}">
                     <span class="startup-dot {{#if this.isStartup}}active{{/if}}" title="{{#if this.isStartup}}Runs on startup{{else}}Manual only{{/if}}"></span>
                     <span class="script-name">{{this.name}}</span>
+                    {{#if this.codeMatches}}
+                    <span class="match-badge" title="{{this.codeMatches}} match(es) in code">{{this.codeMatches}}</span>
+                    {{/if}}
                 </div>
                 {{/each}}
                 
                 {{#unless scripts.length}}
-                <div class="sv-empty-state" style="padding: 20px;">
-                    <p style="color: #666; font-size: 12px;">No scripts yet</p>
-                    <p style="color: #555; font-size: 11px;">Click "New Script" to create one</p>
-                </div>
+                    {{#if hasSearch}}
+                    <div class="sv-empty-state" style="padding: 20px;">
+                        <p style="color: #888; font-size: 12px;">No scripts match "{{searchQuery}}"</p>
+                    </div>
+                    {{else}}
+                    <div class="sv-empty-state" style="padding: 20px;">
+                        <p style="color: #666; font-size: 12px;">No scripts yet</p>
+                        <p style="color: #555; font-size: 11px;">Click "New Script" to create one</p>
+                    </div>
+                    {{/if}}
                 {{/unless}}
             </div>
         </div>
@@ -39,7 +58,6 @@
         <!-- Editor Panel -->
         <div class="sv-editor">
             {{#if selectedScript}}
-            <!-- Script Name -->
             <div class="sv-editor-header">
                 <input type="text" class="editor-name" value="{{selectedScript.name}}" placeholder="Script Name">
                 {{#if isStartupEnabled}}
@@ -47,19 +65,16 @@
                 {{/if}}
             </div>
             
-            <!-- Description -->
             <div class="sv-editor-description">
                 <input type="text" class="editor-description" value="{{selectedScript.description}}" placeholder="Description (optional)">
             </div>
             
-            <!-- Code Editor -->
             <div class="sv-editor-code">
-                <textarea class="editor-code" placeholder="// Enter your script code here...">{{selectedScript.code}}</textarea>
+                <textarea class="editor-code" spellcheck="false" placeholder="// Enter your script code here...">{{selectedScript.code}}</textarea>
             </div>
             
-            <!-- Action Buttons -->
             <div class="sv-editor-actions">
-                <button class="btn-save" title="Save changes">
+                <button class="btn-save" title="Save changes (Ctrl+S)">
                     <i class="fas fa-save"></i> Save
                 </button>
                 <button class="btn-run" title="Execute this script">
@@ -73,7 +88,6 @@
                 </button>
             </div>
             {{else}}
-            <!-- Empty State -->
             <div class="sv-empty-state">
                 <i class="fas fa-code"></i>
                 <p>Select a script from the sidebar</p>
