@@ -1,5 +1,5 @@
 /* =============================================================================
-   SCRIPT VAULT v2.0 - Stylesheet
+   SCRIPT VAULT v2.1 - Stylesheet
    ============================================================================= */
 
 /* Main Window */
@@ -59,7 +59,7 @@
 
 /* Script List Sidebar */
 .sv-sidebar {
-    width: 220px;
+    width: 240px;
     background: #16213e;
     border-right: 2px solid #0f3460;
     display: flex;
@@ -68,11 +68,86 @@
 }
 
 .sv-sidebar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
     padding: 10px 15px;
     font-weight: bold;
     color: #e94560;
     border-bottom: 1px solid #0f3460;
     font-size: 14px;
+}
+
+.sv-script-count {
+    font-size: 11px;
+    font-weight: 600;
+    color: #e0e0e0;
+    background: #0f3460;
+    padding: 2px 8px;
+    border-radius: 10px;
+    letter-spacing: 0.3px;
+}
+
+/* Search bar */
+.sv-search {
+    position: relative;
+    padding: 8px 10px;
+    border-bottom: 1px solid #0f3460;
+    background: #1a2540;
+}
+
+.sv-search-icon {
+    position: absolute;
+    left: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #5a6a8a;
+    font-size: 11px;
+    pointer-events: none;
+}
+
+.sv-search-input {
+    width: 100%;
+    background: #0d1117;
+    border: 1px solid #0f3460;
+    border-radius: 4px;
+    color: #e0e0e0;
+    padding: 6px 28px 6px 28px;
+    font-size: 12px;
+    outline: none;
+    transition: border-color 0.15s, background 0.15s;
+    font-family: inherit;
+}
+
+.sv-search-input::placeholder {
+    color: #5a6a8a;
+}
+
+.sv-search-input:focus {
+    border-color: #e94560;
+    background: #0a0e15;
+}
+
+.sv-search-clear {
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: #888;
+    cursor: pointer;
+    padding: 4px;
+    font-size: 11px;
+    line-height: 1;
+    width: auto;
+    height: auto;
+    box-shadow: none;
+}
+
+.sv-search-clear:hover {
+    color: #e94560;
 }
 
 .sv-script-list {
@@ -119,10 +194,32 @@
 
 .script-item .script-name {
     flex: 1;
+    min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
     font-size: 13px;
+}
+
+/* Match badge - count of search hits in code */
+.script-item .match-badge {
+    flex-shrink: 0;
+    font-size: 10px;
+    font-weight: 700;
+    color: #fff;
+    background: #e94560;
+    padding: 1px 7px;
+    border-radius: 10px;
+    min-width: 20px;
+    text-align: center;
+    line-height: 1.5;
+    box-shadow: 0 0 4px rgba(233, 69, 96, 0.4);
+}
+
+.script-item.active .match-badge {
+    background: #fff;
+    color: #e94560;
+    box-shadow: none;
 }
 
 /* Editor Panel */
@@ -147,7 +244,7 @@
     background: #16213e;
     border: 2px solid #0f3460;
     border-radius: 4px;
-    color: #fff;
+    color: #fff !important;
     font-size: 14px;
     transition: border-color 0.2s;
 }
@@ -167,14 +264,17 @@
     background: #16213e;
     border: 2px solid #0f3460;
     border-radius: 4px;
-    color: #aaa;
+    color: #c9d1d9 !important;
     font-size: 12px;
+}
+
+.sv-editor-description input::placeholder {
+    color: #5a6a8a;
 }
 
 .sv-editor-description input:focus {
     outline: none;
     border-color: #0f3460;
-    color: #fff;
 }
 
 .sv-editor-code {
@@ -183,19 +283,31 @@
     margin-bottom: 10px;
 }
 
-.sv-editor-code textarea {
+.sv-editor-code textarea,
+.script-vault textarea.editor-code {
     width: 100%;
     height: 100%;
     padding: 12px;
-    background: #0d1117;
+    background: #0d1117 !important;
     border: 2px solid #0f3460;
     border-radius: 4px;
-    color: #c9d1d9;
-    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    color: #c9d1d9 !important;
+    caret-color: #e94560;
+    font-family: 'Fira Code', 'Consolas', 'Monaco', 'Courier New', monospace;
     font-size: 13px;
     line-height: 1.5;
     resize: none;
     tab-size: 4;
+    -moz-tab-size: 4;
+}
+
+.sv-editor-code textarea::placeholder {
+    color: #4a5a7a;
+}
+
+.sv-editor-code textarea::selection {
+    background: rgba(233, 69, 96, 0.4);
+    color: #fff;
 }
 
 .sv-editor-code textarea:focus {
@@ -338,7 +450,7 @@
     
     .sv-sidebar {
         width: 100%;
-        height: 150px;
+        height: 200px;
         border-right: none;
         border-bottom: 2px solid #0f3460;
     }
